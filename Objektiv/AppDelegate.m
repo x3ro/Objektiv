@@ -198,7 +198,7 @@
     }
 
     _defaultBrowser = identifier;
-    [self showNotification:_defaultBrowser];
+//    [self showNotification:_defaultBrowser];
     [[Browsers sharedInstance] findBrowsersAsync];
 
     return TRUE;
