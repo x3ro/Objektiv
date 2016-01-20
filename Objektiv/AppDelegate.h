@@ -14,7 +14,7 @@
 
 - (void) hotkeyTriggered;
 - (void) selectABrowser:sender;
-- (void) updateStatusBarIcon;
+- (BOOL) updateStatusBarIcon;
 
 @property PrefsController* prefsController;
 

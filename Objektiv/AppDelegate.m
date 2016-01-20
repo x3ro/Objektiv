@@ -133,8 +133,7 @@
 
     NSLog(@"Selecting a browser: %@", newDefaultBrowser);
     [Browsers sharedInstance].defaultBrowserIdentifier = newDefaultBrowser;
-    [self performSelector:@selector(updateStatusBarIcon) withObject:nil afterDelay:0.1];
-    [self showNotification:newDefaultBrowser];
+    [self tryUpdateStatusBarIcon: newDefaultBrowser numberOfTries:0];
 }
 
 - (void) toggleLoginItem
@@ -173,14 +172,36 @@
     statusBarIcon.menu = browserMenu;
 }
 
-- (void) updateStatusBarIcon;
+- (void) tryUpdateStatusBarIcon: (NSString*)newDefaultBrowser numberOfTries:(int)numberOfTries {
+    if(numberOfTries > 5) {
+        return;
+    }
+
+    float delayInSeconds = 0.5 * pow(2, numberOfTries);
+
+    dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, delayInSeconds * NSEC_PER_SEC);
+    dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
+        BOOL updated = [self updateStatusBarIcon];
+        if(!updated) {
+            [self tryUpdateStatusBarIcon:newDefaultBrowser numberOfTries:numberOfTries+1];
+        }
+    });
+}
+
+- (BOOL) updateStatusBarIcon
 {
     NSString *identifier = [Browsers sharedInstance].defaultBrowserIdentifier;
     statusBarIcon.image = [ImageUtils statusBarIconForAppId:identifier];
 
-    if ([identifier isEqualToString:_defaultBrowser]) return;
+    if ([identifier isEqualToString:_defaultBrowser]) {
+        return FALSE;
+    }
+
     _defaultBrowser = identifier;
+    [self showNotification:_defaultBrowser];
     [[Browsers sharedInstance] findBrowsersAsync];
+
+    return TRUE;
 }
 
 - (void) destroyStatusBarIcon
